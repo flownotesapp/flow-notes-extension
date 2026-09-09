@@ -6,7 +6,7 @@
 // NOTE: BACKEND_URL and LOCAL_SERVER_URL are placeholders for now —
 // wire these up once the Go backend exists.
 
-const BACKEND_URL = "https://flow-notes-backend-production.up.railway.app";
+const BACKEND_URL = "https://flow-notes-backend-479262667846.asia-south1.run.app";
 
 // A URL without a scheme is not an error to fetch() — it is treated as a
 // path relative to the extension's own origin, so the request quietly goes
@@ -142,7 +142,7 @@ const HELPER_MIN_VERSION = "0.6.0";
 // offering a dead link — a placeholder that silently does nothing when
 // clicked is worse than one that admits it isn't configured.
 const HELPER_DOWNLOAD_URL =
-  "https://github.com/saumya-vyas/flow-notes-extension/releases/latest";
+  "https://github.com/flownotesapp/flow-notes-extension/releases/latest";
 
 const HELPER_DOWNLOAD_CONFIGURED = !HELPER_DOWNLOAD_URL.includes("YOUR-USER");
 
