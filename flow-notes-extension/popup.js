@@ -404,7 +404,7 @@ function aiButton(note, mode, label) {
   btn.title =
     mode === "low"
       ? `Organise "${note.title}" — structure and formatting, wording mostly kept`
-      : `Summarise "${note.title}" — clarify hard terms, add context only where thin`;
+      : `Summarise "${note.title}" — fill the gaps so re-reading it later needs nothing looked up`;
 
   btn.addEventListener("click", (event) => {
     // Without this the row's own handler opens the note as well.

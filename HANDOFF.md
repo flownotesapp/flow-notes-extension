@@ -414,9 +414,29 @@ of background.
 
 Lesson: expansion instructions are an accelerator with no brake. A length
 budget plus a named failure mode restrains output where "be concise" does
-not. `TestSummarizeAndOrganizePromptsDiffer` now asserts the restraint
-constraints are present and the old expansion wording is gone, so a future
-edit cannot quietly reintroduce it.
+not.
+
+**Then rewritten a third time (2026-09-09)**, because blanket restraint
+over-shot in the other direction and suppressed the gap-filling that was
+the actual goal. The brief the user gave: re-reading the note later should
+require nothing to be looked up. Four levers, all asserted by
+`TestSummarizeAndOrganizePromptsDiffer` so none can be quietly dropped:
+
+1. **Purpose inference first** -- work out whether the reader is learning a
+   new subject, collecting reference material, following an argument,
+   gathering quotes or working a problem, *before* writing; and keep that
+   conclusion out of the note. What helps a learner is not what helps
+   someone collecting reference they already know.
+2. **A concrete inclusion test** replacing the length target: would the
+   reader, returning in a month, be stuck or have to look something up?
+3. **Uneven expansion, deliberately** -- dense sections get almost
+   nothing, cryptic ones get several sentences; equal lengths are padding.
+4. **Accuracy over completeness** -- asking for jargon definitions invites
+   confidently wrong ones, which beat missing ones only in appearance.
+
+The arc across three versions is the lesson: "expand" produced bloat, a
+hard length cap produced timidity, and only a purpose-driven test for what
+to include produced the right shape.
 
 **Gotchas hit and fixed:**
 - The inline parser emitted one span per character (the fallback path
