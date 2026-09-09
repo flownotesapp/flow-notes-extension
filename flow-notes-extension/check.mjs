@@ -48,7 +48,33 @@ for (const m of read("./popup.js").matchAll(/getElementById\("([^"]+)"\)/g)) {
   if (!html.includes(`id="${m[1]}"`)) fail(`popup.js uses #${m[1]} which popup.html does not define`);
 }
 
-// 4. Permissions the code actually relies on must be declared.
+// 4. Permissions must be declared AND used. A declared-but-unused
+//    permission is a documented Chrome Web Store rejection reason, and
+//    activeTab sat in the manifest unused until this check was written.
+const permissionUse = {
+  storage: /chrome\.storage\./,
+  identity: /chrome\.identity\./,
+  nativeMessaging: /sendNativeMessage|connectNative/,
+  scripting: /chrome\.scripting\./,
+  activeTab: /activeTab/,
+  tabs: /chrome\.tabs\./,
+  notifications: /chrome\.notifications\./,
+  contextMenus: /chrome\.contextMenus\./,
+  alarms: /chrome\.alarms\./,
+};
+const allCode = [worker, ...Object.values(senders)].join("\n");
+for (const perm of manifest.permissions) {
+  const pattern = permissionUse[perm];
+  if (!pattern) {
+    console.warn(`note: no usage check defined for permission "${perm}"`);
+    continue;
+  }
+  if (!pattern.test(allCode)) {
+    fail(`manifest.json declares "${perm}" but no code uses it — reviewers reject unused permissions`);
+  }
+}
+
+// 5. Permissions the code actually relies on must be declared.
 const needed = [
   ["nativeMessaging", /sendNativeMessage/],
   ["scripting", /chrome\.scripting\./],

@@ -1,0 +1,6 @@
+# Web Store packages are build output.
+dist/
+
+# Stray archives and macOS metadata must never reach a package.
+*.zip
+.DS_Store

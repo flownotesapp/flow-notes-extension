@@ -4,7 +4,7 @@
   "name": "Flow Notes",
   "version": "0.1.0",
   "description": "Capture highlights while reading, without breaking your flow.",
-  "permissions": ["storage", "identity", "activeTab", "nativeMessaging", "scripting"],
+  "permissions": ["storage", "identity", "nativeMessaging", "scripting"],
   "host_permissions": ["http://*/*", "https://*/*"],
   "background": {
     "service_worker": "background.js",

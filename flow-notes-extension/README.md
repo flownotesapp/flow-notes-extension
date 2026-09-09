@@ -47,6 +47,22 @@ visible field.
 recoverable. It removes the server's index only; the wording is explicit
 that the user's own Docs, Apple notes and files are untouched.
 
+## Packaging for the Chrome Web Store
+
+```
+cd flow-notes-extension && ./package.sh
+```
+
+Ships **only** `manifest.json`, the three scripts, `popup.html` and
+`icons/`. `README.md` and `check.mjs` are development files: including them
+puts unused code in the package, which reviewers flag, and `check.mjs`
+would read as a build script that never runs. The script refuses to build
+if the checks fail, and refuses to emit a package containing a README,
+`.env`, `.DS_Store` or a stray archive.
+
+Zip the **folder contents**, never the repository root -- a package
+containing sibling projects will be rejected.
+
 ## Checks
 
 ```
