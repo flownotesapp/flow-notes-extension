@@ -1,0 +1,86 @@
+/* Ruled-paper theme, matching the extension. All CSS gradients, no
+   assets, so these pages load instantly and work offline. */
+:root {
+  --rule: 28px;
+  --paper: #f9f3e1;
+  --paper-edge: #eee2c6;
+  --sheen: rgba(255, 255, 255, 0.55);
+  --rule-ink: rgba(74, 60, 36, 0.15);
+  --margin-ink: rgba(178, 74, 74, 0.34);
+  --ink: #2f2a21;
+  --ink-soft: #6d6353;
+  --ink-faint: #9a8f7c;
+  --surface: #fffdf5;
+  --edge: rgba(74, 60, 36, 0.22);
+  --font-sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-serif: ui-serif, "Iowan Old Style", Georgia, "Times New Roman", serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #1b1917; --paper-edge: #141311; --sheen: rgba(255,255,255,0.04);
+    --rule-ink: rgba(255,238,205,0.075); --margin-ink: rgba(198,96,96,0.3);
+    --ink: #ece3d1; --ink-soft: #a89d88; --ink-faint: #7c7263;
+    --surface: #24211d; --edge: rgba(255,238,205,0.17);
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: var(--rule);
+  color: var(--ink);
+  background-color: var(--paper);
+  background-image:
+    radial-gradient(100% 60% at 50% 0%, var(--sheen) 0%, transparent 55%),
+    radial-gradient(100% 100% at 50% 100%, var(--paper-edge) 0%, transparent 50%);
+}
+.sheet {
+  position: relative;
+  max-width: 660px;
+  margin: 0 auto;
+  padding: 48px 32px 72px 68px;
+  min-height: 100vh;
+}
+.sheet::before {
+  content: "";
+  position: absolute;
+  top: 0; bottom: 0; left: 46px;
+  width: 1px;
+  background: var(--margin-ink);
+}
+.eyebrow {
+  font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--ink-faint); line-height: 1; margin-bottom: 8px;
+}
+h1 {
+  font-family: var(--font-serif); font-size: 34px; font-weight: 600;
+  letter-spacing: -0.015em; line-height: 40px; margin: 0 0 6px;
+}
+.tagline { color: var(--ink-soft); margin: 0 0 4px; font-size: 16px; }
+h2 {
+  font-family: var(--font-serif); font-size: 20px; font-weight: 600;
+  margin: 36px 0 8px; padding-top: 10px;
+  border-top: 3px double var(--margin-ink);
+}
+h3 { font-size: 14px; margin: 22px 0 4px; }
+p, li { color: var(--ink-soft); }
+strong { color: var(--ink); font-weight: 600; }
+ul { padding-left: 20px; }
+li { margin-bottom: 4px; }
+a { color: var(--ink); text-decoration-color: var(--ink-faint); }
+code {
+  font-family: ui-monospace, Menlo, monospace; font-size: 13px;
+  background: rgba(120, 105, 75, 0.13); border-radius: 3px; padding: 1px 4px;
+}
+.card {
+  background: var(--surface); border: 1px solid var(--edge);
+  border-radius: 8px; padding: 14px 18px; margin: 18px 0;
+}
+.card p:first-child { margin-top: 0; }
+.card p:last-child { margin-bottom: 0; }
+footer {
+  margin-top: 48px; padding-top: 14px; border-top: 1px solid var(--edge);
+  font-size: 12px; color: var(--ink-faint);
+}
+.updated { font-size: 12px; color: var(--ink-faint); }
