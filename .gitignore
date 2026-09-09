@@ -1,0 +1,22 @@
+# The backend lives in its own repository (and Railway deploys from it).
+flow-notes-backend/
+
+# Build artifacts — these were being committed before, which is why the
+# helper repo carried an 8MB binary and a 17MB release zip.
+flow-notes-local/dist/
+flow-notes-local/flow-notes-local
+*.exe
+*.zip
+
+# Secrets. Everything the backend needs comes from the environment;
+# nothing secret belongs in this repository.
+.env
+.env.*
+!.env.example
+*.pem
+captures-backup.sql
+
+# macOS / editors
+.DS_Store
+.vscode/
+.idea/

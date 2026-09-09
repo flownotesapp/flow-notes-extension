@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Flow Notes</title>
+  <style>
+    /* ------------------------------------------------------------------
+       Ruled-paper theme.
+
+       The whole look is CSS gradients — no image assets, so the popup
+       stays a couple of KB and renders instantly. Two rules keep it from
+       looking like a gimmick:
+
+         1. The ruling pitch (--rule) and the line-height of every text
+            row are the same number, so text sits ON the lines instead of
+            drifting across them.
+         2. Only one accent (the highlighter wash) and one danger colour.
+            Everything else is ink on paper.
+       ------------------------------------------------------------------ */
+    :root {
+      --rule: 26px;              /* ruling pitch AND line-height */
+      --margin-x: 30px;          /* red margin rule position */
+
+      --paper: #f9f3e1;
+      --paper-edge: #eee2c6;
+      /* Top-of-page sheen. A token, not a literal: hardcoding white here
+         blows out the dark theme and swallows the header. */
+      --sheen: rgba(255, 255, 255, 0.55);
+      --rule-ink: rgba(74, 60, 36, 0.17);
+      --margin-ink: rgba(178, 74, 74, 0.38);
+
+      --ink: #2f2a21;
+      --ink-soft: #6d6353;
+      --ink-faint: #9a8f7c;
+
+      /* Controls sit ON the paper, so they need an opaque surface of
+         their own — otherwise the ruling runs straight through them and
+         collides with their borders. --edge is deliberately NOT --rule-ink:
+         a border in the same colour as the lines reads as more ruling
+         rather than as the edge of a control. */
+      --surface: #fffdf5;
+      --edge: rgba(74, 60, 36, 0.22);
+      --highlight: #ffe583;
+      --danger: #9e332d;
+      --danger-wash: #f6e2df;
+
+      --font-sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --font-serif: ui-serif, "Iowan Old Style", Georgia, "Times New Roman", serif;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --paper: #1b1917;
+        --paper-edge: #141311;
+        --sheen: rgba(255, 255, 255, 0.04);
+        --rule-ink: rgba(255, 238, 205, 0.075);
+        --margin-ink: rgba(198, 96, 96, 0.30);
+
+        --ink: #ece3d1;
+        --ink-soft: #a89d88;
+        --ink-faint: #7c7263;
+
+        --surface: #24211d;
+        --edge: rgba(255, 238, 205, 0.17);
+        --highlight: rgba(255, 219, 120, 0.20);
+        --danger: #e08a83;
+        --danger-wash: rgba(158, 51, 45, 0.22);
+      }
+    }
+
+    * { box-sizing: border-box; }
+
+    /* Chrome paints its own background behind the popup; making it
+       transparent is what lets the page's rounded corners actually show
+       instead of sitting on a white rectangle. */
+    html { background: transparent; }
+
+    body {
+      width: 340px;
+      margin: 0;
+      padding: 0;
+      border-radius: 12px;
+      overflow: hidden;
+      font-family: var(--font-sans);
+      font-size: 13px;
+      color: var(--ink);
+      background-color: var(--paper);
+      /* Warm vignette only. The ruling belongs to the writing area, not
+         the whole sheet — see #note-list. Ruling the body meant the lines
+         had to line up with a header of arbitrary height, which they
+         can't be relied on to do. */
+      background-image:
+        radial-gradient(120% 90% at 50% 0%, var(--sheen) 0%, transparent 60%),
+        radial-gradient(100% 100% at 50% 100%, var(--paper-edge) 0%, transparent 55%);
+    }
+
+    /* The classic left margin rule. Purely decorative, and the reason the
+       content is indented rather than centred. */
+    .sheet {
+      position: relative;
+      padding: 14px var(--rule) 16px calc(var(--margin-x) + 14px);
+      min-height: 180px;
+    }
+    .sheet::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: var(--margin-x);
+      width: 1px;
+      background: var(--margin-ink);
+    }
+
+    /* The masthead of the page. A double rule beneath it is what reads as
+       "notebook header" rather than "text that happens to be at the top",
+       and it borrows the margin line's red so the two agree. */
+    header {
+      margin: 0 0 10px;
+      padding-bottom: 8px;
+      border-bottom: 3px double var(--margin-ink);
+    }
+    .masthead {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    /* Capture toggle. A real <button role="switch"> rather than a styled
+       checkbox, so it is keyboard-operable and announces its state. */
+    .power { display: flex; align-items: center; gap: 6px; padding-top: 3px; }
+    .power-label {
+      font-size: 9px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      line-height: 1;
+    }
+    .switch {
+      position: relative;
+      flex: none;
+      width: 32px;
+      height: 18px;
+      padding: 0;
+      border: 1px solid var(--edge);
+      border-radius: 999px;
+      background: var(--surface);
+      cursor: pointer;
+      transition: background 140ms ease, border-color 140ms ease;
+    }
+    .switch .knob {
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--ink-faint);
+      transition: transform 140ms ease, background 140ms ease;
+    }
+    .switch[aria-checked="true"] { background: var(--ink); border-color: var(--ink); }
+    .switch[aria-checked="true"] .knob { transform: translateX(14px); background: var(--paper); }
+    .switch:focus-visible { outline: 1px solid var(--ink); outline-offset: 2px; }
+    .eyebrow {
+      font-size: 9px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    h1 {
+      font-family: var(--font-serif);
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      line-height: var(--rule);
+      margin: 0;
+    }
+
+    /* The writing area. Row line-height equals the ruling pitch, so every
+       note sits exactly on a line. min-height keeps a few empty lines
+       below the last note, so it reads as a page with room left to write
+       rather than a list that stops dead. */
+    #note-list {
+      display: flex;
+      flex-direction: column;
+      min-height: calc(var(--rule) * 5);
+      background-image: repeating-linear-gradient(
+        to bottom,
+        transparent 0,
+        transparent calc(var(--rule) - 1px),
+        var(--rule-ink) calc(var(--rule) - 1px),
+        var(--rule-ink) var(--rule)
+      );
+    }
+
+    .note-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      line-height: var(--rule);
+      min-height: var(--rule);
+      cursor: pointer;
+      position: relative;
+      /* Hover paints a highlighter swipe across the line rather than
+         drawing a box — boxes would fight the ruling. */
+      background-image: linear-gradient(var(--highlight), var(--highlight));
+      background-repeat: no-repeat;
+      background-size: 0% 78%;
+      background-position: 0 60%;
+      transition: background-size 140ms ease;
+    }
+    .note-item:hover { background-size: 100% 78%; }
+
+    .note-title {
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 13px;
+    }
+    .note-target {
+      flex: none;
+      font-size: 9px;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+    }
+
+    /* Row actions share the space the storage chip occupies: the chip is
+       reference information, the actions are what you came to do, so on
+       hover the row trades one for the other rather than getting wider. */
+    .note-actions {
+      flex: none;
+      display: none;
+      align-items: center;
+      gap: 4px;
+    }
+    .note-item:hover .note-actions,
+    .note-item:focus-within .note-actions { display: flex; }
+    .note-item:hover .note-target,
+    .note-item:focus-within .note-target { display: none; }
+
+    .note-action {
+      font-family: inherit;
+      font-size: 9px;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+      background: var(--surface);
+      border: 1px solid var(--edge);
+      border-radius: 4px;
+      padding: 2px 5px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .note-action:hover { color: var(--ink); border-color: var(--ink-faint); }
+    .note-action[disabled] { opacity: 0.5; cursor: default; }
+    /* The row is busy: hide actions on every row, not just this one. */
+    .note-list-busy .note-actions { display: none !important; }
+    .note-list-busy .note-target { display: inline !important; }
+
+    .note-delete {
+      flex: none;
+      width: 18px;
+      height: 18px;
+      padding: 0;
+      border: none;
+      border-radius: 4px;
+      background: transparent;
+      color: var(--ink-faint);
+      font-size: 14px;
+      line-height: 1;
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity 120ms ease, background 120ms ease, color 120ms ease;
+    }
+    .note-actions .note-delete { opacity: 1; }
+    .note-delete:hover { background: var(--danger-wash); color: var(--danger); }
+    .note-delete:focus-visible { opacity: 1; outline: 1px solid var(--danger); }
+    /* Armed state: wide enough to read, so a destructive click is never
+       one pixel away from an idle cursor. */
+    .note-delete.confirm {
+      opacity: 1;
+      width: auto;
+      padding: 0 6px;
+      background: var(--danger);
+      color: var(--paper);
+      font-size: 9px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    #empty-state {
+      font-family: var(--font-serif);
+      /* Sits inside the ruled writing area, so it obeys the same rhythm. */
+      font-style: italic;
+      font-size: 13px;
+      line-height: var(--rule);
+      color: var(--ink-faint);
+    }
+
+    #error-state {
+      font-size: 11px;
+      line-height: 16px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      color: var(--danger);
+      background: var(--danger-wash);
+      border-left: 2px solid var(--danger);
+      padding: 7px 9px;
+      margin-bottom: 10px;
+      border-radius: 0 4px 4px 0;
+      display: none;
+    }
+    #error-state.notice {
+      color: var(--ink-soft);
+      background: rgba(120, 105, 75, 0.10);
+      border-left-color: var(--ink-faint);
+    }
+
+    /* Foot of the page: below the ruled area, on clean paper. */
+    /* Setup slip: shown only when a local storage target is in play and the
+       helper isn't there. Drive-only users never see it. */
+    #setup-panel[hidden] { display: none; }
+    #setup-panel {
+      background: var(--surface);
+      border: 1px solid var(--edge);
+      border-radius: 6px;
+      padding: 10px 11px;
+      margin-bottom: 10px;
+      font-size: 11px;
+      line-height: 15px;
+      color: var(--ink-soft);
+    }
+    .setup-title {
+      font-family: var(--font-serif);
+      font-size: 13px;
+      color: var(--ink);
+      margin-bottom: 4px;
+    }
+    .setup-panel p { margin: 0 0 7px; }
+    .setup-steps { margin: 7px 0 0; padding-left: 15px; }
+    .setup-steps li { margin-bottom: 5px; }
+    #setup-panel code {
+      font-family: ui-monospace, Menlo, monospace;
+      font-size: 10px;
+      background: rgba(120, 105, 75, 0.13);
+      border-radius: 3px;
+      padding: 1px 3px;
+      word-break: break-all;
+    }
+    .setup-buttons { display: flex; gap: 6px; margin-top: 9px; }
+    .setup-buttons button, .setup-buttons a {
+      flex: 1;
+      font-family: inherit;
+      font-size: 11px;
+      text-align: center;
+      text-decoration: none;
+      border-radius: 5px;
+      padding: 6px 8px;
+      cursor: pointer;
+    }
+    #setup-download[hidden] { display: none; }
+    #setup-download { color: var(--paper); background: var(--ink); border: 1px solid var(--ink); }
+    #setup-download:hover { opacity: 0.88; }
+    #setup-recheck {
+      color: var(--ink);
+      background: transparent;
+      border: 1px solid var(--edge);
+    }
+    #setup-recheck:hover { border-color: var(--ink-faint); }
+
+    /* Settings, folded away by default — the popup's job is the note
+       list, and a key you set once should not occupy it permanently. */
+    #settings-panel[hidden] { display: none; }
+    #settings-toggle {
+      display: block;
+      width: 100%;
+      margin-top: 8px;
+      padding: 0;
+      border: none;
+      background: transparent;
+      color: var(--ink-faint);
+      font-family: inherit;
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      text-align: right;
+      cursor: pointer;
+    }
+    #settings-toggle:hover { color: var(--ink-soft); }
+    #settings-panel {
+      margin-top: 8px;
+      padding: 10px 11px;
+      background: var(--surface);
+      border: 1px solid var(--edge);
+      border-radius: 6px;
+      font-size: 11px;
+      line-height: 15px;
+      color: var(--ink-soft);
+    }
+    .settings-label {
+      display: block;
+      font-size: 9px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      margin-bottom: 4px;
+    }
+    #groq-key {
+      width: 100%;
+      font-family: ui-monospace, Menlo, monospace;
+      font-size: 11px;
+      color: var(--ink);
+      background: var(--paper);
+      border: 1px solid var(--edge);
+      border-radius: 5px;
+      padding: 6px 8px;
+      margin-bottom: 7px;
+    }
+    #settings-panel p { margin: 7px 0 0; font-size: 10px; line-height: 14px; }
+    #settings-panel a { color: var(--ink); }
+    #delete-all {
+      width: 100%;
+      margin-top: 10px;
+      font-family: inherit;
+      font-size: 10px;
+      color: var(--danger);
+      background: transparent;
+      border: 1px solid var(--danger);
+      border-radius: 5px;
+      padding: 6px;
+      cursor: pointer;
+    }
+    #delete-all:hover { background: var(--danger-wash); }
+    #delete-all.confirm { color: var(--paper); background: var(--danger); }
+
+    .compose {
+      display: flex;
+      gap: 6px;
+      align-items: stretch;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--edge);
+    }
+    #new-note-btn[disabled] { opacity: 0.55; cursor: default; }
+
+    #storage-target {
+      flex: 1;
+      min-width: 0;
+      appearance: none;
+      -webkit-appearance: none;
+      font-family: inherit;
+      font-size: 11px;
+      color: var(--ink-soft);
+      background-color: var(--surface);
+      /* Custom caret: a native select arrow would drag its own chrome
+         into an otherwise flat paper surface. */
+      background-image:
+        linear-gradient(45deg, transparent 50%, var(--ink-faint) 50%),
+        linear-gradient(135deg, var(--ink-faint) 50%, transparent 50%);
+      background-position: right 11px center, right 6px center;
+      background-size: 5px 5px, 5px 5px;
+      background-repeat: no-repeat;
+      border: 1px solid var(--edge);
+      border-radius: 6px;
+      padding: 7px 22px 7px 9px;
+      cursor: pointer;
+    }
+    #storage-target:hover { border-color: var(--ink-faint); }
+    /* The dropdown itself is OS-rendered, so give it readable colours. */
+    #storage-target option { color: var(--ink); background: var(--surface); }
+
+    #new-note-btn {
+      flex: none;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--paper);
+      background: var(--ink);
+      border: none;
+      border-radius: 6px;
+      padding: 7px 13px;
+      cursor: pointer;
+      transition: transform 90ms ease, opacity 120ms ease;
+    }
+    #new-note-btn:hover { opacity: 0.88; }
+    #new-note-btn:active { transform: translateY(1px); }
+  </style>
+</head>
+<body>
+  <div class="sheet">
+    <header>
+      <div class="masthead">
+        <div>
+          <div class="eyebrow">Flow Notes</div>
+          <h1>Your notes</h1>
+        </div>
+        <div class="power">
+          <span class="power-label" id="power-label">On</span>
+          <button id="power-toggle" class="switch" role="switch" aria-checked="true"
+                  title="Pause or resume highlight capture"
+                  aria-label="Highlight capture"><span class="knob"></span></button>
+        </div>
+      </div>
+    </header>
+
+    <div id="error-state"></div>
+
+    <div id="setup-panel" class="setup-panel" hidden>
+      <div class="setup-title" id="setup-title">Set up local storage</div>
+      <p id="setup-body"></p>
+      <ol class="setup-steps" id="setup-steps"></ol>
+      <div class="setup-buttons">
+        <a id="setup-download" href="#" target="_blank" rel="noopener">Download</a>
+        <button id="setup-recheck">Check again</button>
+      </div>
+    </div>
+    <div id="note-list">
+      <div id="empty-state" style="display:none;">Nothing captured yet.</div>
+    </div>
+
+    <div class="compose">
+      <select id="storage-target" title="Where a new note gets stored">
+        <option value="drive">Google Drive</option>
+        <option value="apple_notes">Apple Notes</option>
+        <option value="local">Local file</option>
+      </select>
+      <button id="new-note-btn">New note</button>
+    </div>
+    <button id="settings-toggle">Settings</button>
+
+    <div id="settings-panel" hidden>
+      <label class="settings-label" for="groq-key">Your Groq API key</label>
+      <input id="groq-key" type="password" placeholder="gsk_..." autocomplete="off" spellcheck="false" />
+      <div class="setup-buttons">
+        <button id="groq-save">Save key</button>
+        <button id="groq-clear">Clear</button>
+      </div>
+      <p id="groq-status"></p>
+      <p>
+        Organise and Summarise use a free
+        <a href="https://console.groq.com/keys" target="_blank" rel="noopener">Groq</a>
+        key. Adding your own gives you your own rate limit instead of
+        sharing one. It is stored in your browser profile and sent only
+        when you organise a note.
+      </p>
+      <button id="delete-all">Delete my data from the server</button>
+      <p id="delete-status"></p>
+    </div>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>

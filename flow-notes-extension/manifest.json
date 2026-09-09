@@ -1,0 +1,40 @@
+{
+  "manifest_version": 3,
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAkcNs6UIiOSgWCuLkxCIpaEfvSvSSn2MgoYFc+Ac1LVs8Jvpb15NwHgpXaO0NovFLVUCGY4gl1pFKmBrTx2j/7T2AP5ixlbCuKfNcnM1s/tW7Dmlie6Ieemdac6GA17nCI9pDDUwmovW/dOa2e2E3gBK72bYmuwC9J0Vm+sHesu8ru5l9uXP+W96V2ZeLnJjRllEXyWdP8JzAzi3TuVavHmFhB3q7sxjTtTPx2MEa2EuBOcGWsz6MeHAayKjQySFBGe46odlo564qidC3OPg+IuD9oKcEmRMwmoaB7/FzaoRghX4AHpuykdHumshnOuaGXxGeSriJwL1BjKOENLCtkQIDAQAB",
+  "name": "Flow Notes",
+  "version": "0.1.0",
+  "description": "Capture highlights while reading, without breaking your flow.",
+  "permissions": ["storage", "identity", "activeTab", "nativeMessaging", "scripting"],
+  "host_permissions": ["http://*/*", "https://*/*"],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "oauth2": {
+    "client_id": "479262667846-5ao0126fmcce7tqhemeo3v1i577ocq7d.apps.googleusercontent.com",
+    "scopes": [
+      "openid",
+      "https://www.googleapis.com/auth/drive.file"
+    ]
+  }
+}
